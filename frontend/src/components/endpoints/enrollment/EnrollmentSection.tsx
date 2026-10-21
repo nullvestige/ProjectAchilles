@@ -184,7 +184,7 @@ export default function EnrollmentSection({ orgId }: EnrollmentSectionProps): Re
                 />
                 <InstallCommand
                   label="Windows (PowerShell)"
-                  command={`Invoke-WebRequest -Uri "${serverUrl}/api/agent/download?os=windows&arch=amd64" -Headers @{"ngrok-skip-browser-warning"="true"} -OutFile achilles-agent.exe; .\\achilles-agent.exe --enroll ${newToken} --server ${serverUrl} --install`}
+                  command={`Invoke-WebRequest -Uri "${serverUrl}/api/agent/download?os=windows&arch=amd64" -Headers @{"ngrok-skip-browser-warning"="true"} -OutFile achilles-agent.exe; .\\achilles-agent.exe --enroll ${newToken} --server ${serverUrl} --install --allow-insecure`}
                 />
               </div>
             </div>

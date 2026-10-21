@@ -336,6 +336,26 @@ func Execute(ctx context.Context, client *httpclient.Client, task Task, cfg *con
 		break
 	}
 
+	// Step 9c: Read test_execution_log.txt if present (human-readable test logger output).
+	logCandidates := []string{filepath.Join(bundleDir, "test_execution_log.txt")}
+	if runtime.GOOS == "windows" {
+		logCandidates = append(logCandidates, `C:\F0\test_execution_log.txt`)
+	} else {
+		logCandidates = append(logCandidates, "/tmp/F0/test_execution_log.txt")
+	}
+	for _, logPath := range logCandidates {
+		data, readErr := os.ReadFile(logPath)
+		if readErr != nil {
+			continue
+		}
+		if int64(len(data)) > maxOutputBytes {
+			data = data[:maxOutputBytes]
+		}
+		result.Logs = string(data)
+		os.Remove(logPath)
+		break
+	}
+
 	// Steps 10-11: Cleanup handled by defer; return result.
 	return result, nil
 }

@@ -46,7 +46,7 @@ func TestValidateServerURL(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateServerURL(tc.url)
+			err := ValidateServerURL(tc.url, false)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("ValidateServerURL(%q) error = %v, wantErr %v", tc.url, err, tc.wantErr)
 			}

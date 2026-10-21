@@ -6,8 +6,8 @@ const result = (exit_code: number): TaskResult => ({
   exit_code, stdout: '', stderr: '', started_at: '', completed_at: '', execution_duration_ms: 0, hostname: '',
 } as TaskResult);
 
-type TaskLike = Pick<AgentTask, 'status' | 'result'>;
-const task = (status: AgentTask['status'], r: TaskResult | null = null): TaskLike => ({ status, result: r });
+type TaskLike = Pick<AgentTask, 'status' | 'type' | 'result'>;
+const task = (status: AgentTask['status'], r: TaskResult | null = null, type: AgentTask['type'] = 'execute_test'): TaskLike => ({ status, type, result: r });
 
 describe('resolveTaskStatusDisplay — honesty rule', () => {
   it('completed with exit_code 0 → Completed / success', () => {
@@ -26,7 +26,6 @@ describe('resolveTaskStatusDisplay — honesty rule', () => {
   });
 
   it('completed with no result yet → Completed / success (no result is not a failure)', () => {
-    // status is authoritative when there is no exit code to contradict it
     expect(resolveTaskStatusDisplay(task('completed', null)).variant).toBe('success');
   });
 
@@ -46,5 +45,30 @@ describe('resolveTaskStatusDisplay — honesty rule', () => {
   it('pending/expired → default', () => {
     expect(resolveTaskStatusDisplay(task('pending')).variant).toBe('default');
     expect(resolveTaskStatusDisplay(task('expired')).variant).toBe('default');
+  });
+
+  // Security-test conclusive exit codes
+  it('execute_test with exit 126 (PROTECTED) → Completed / success', () => {
+    const d = resolveTaskStatusDisplay(task('completed', result(126)));
+    expect(d).toEqual({ label: 'Completed', variant: 'success' });
+  });
+
+  it('execute_test with exit 101 (UNPROTECTED) → Completed / success', () => {
+    const d = resolveTaskStatusDisplay(task('completed', result(101)));
+    expect(d).toEqual({ label: 'Completed', variant: 'success' });
+  });
+
+  it('execute_test with exit 105 (PROTECTED) → Completed / success', () => {
+    expect(resolveTaskStatusDisplay(task('completed', result(105))).variant).toBe('success');
+  });
+
+  it('execute_test with exit 127 (PROTECTED) → Completed / success', () => {
+    expect(resolveTaskStatusDisplay(task('completed', result(127))).variant).toBe('success');
+  });
+
+  it('execute_command with exit 126 → still Failed (not a security test)', () => {
+    const d = resolveTaskStatusDisplay(task('completed', result(126), 'execute_command'));
+    expect(d.variant).toBe('destructive');
+    expect(d.label).toBe('Failed');
   });
 });

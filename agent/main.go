@@ -27,7 +27,7 @@ func main() {
 	configPath := flag.String("config", config.DefaultConfigPath(), "Path to config file")
 	run := flag.Bool("run", false, "Run agent in foreground")
 	reload := flag.Bool("reload", false, "Signal the running service to re-read its config from disk (no restart)")
-	allowInsecure := flag.Bool("allow-insecure", false, "Allow skip_tls_verify for remote servers (NOT recommended)")
+	allowInsecure := flag.Bool("allow-insecure", false, "Allow plaintext HTTP and skip_tls_verify for remote servers (LAN dev only, NOT for production)")
 
 	flag.Parse()
 
@@ -41,7 +41,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "error: --server is required with --enroll")
 			os.Exit(1)
 		}
-		if err := enrollment.Enroll(*server, *enroll, *configPath, version); err != nil {
+		if err := enrollment.Enroll(*server, *enroll, *configPath, version, *allowInsecure); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
@@ -97,11 +97,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := cfg.ValidateTLSConfig(*allowInsecure); err != nil {
+	if err := cfg.ValidateTLSConfig(*allowInsecure || cfg.AllowInsecure); err != nil {
 		fmt.Fprintf(os.Stderr, "TLS config error: %v\n", err)
 		os.Exit(1)
 	}
-	if *allowInsecure && cfg.SkipTLSVerify {
+	if (*allowInsecure || cfg.AllowInsecure) && cfg.SkipTLSVerify {
 		log.Println("WARNING: TLS certificate verification is disabled via --allow-insecure. This is NOT recommended for production.")
 	}
 

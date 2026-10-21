@@ -83,6 +83,22 @@ export const reportsApi = {
     const response = await apiClient.get('/reports/executions', { params });
     return response.data.data;
   },
+
+  /** Export SB-PC-2026-001 JSON from a completed task's bundle_results (no ES needed). */
+  async downloadSbTaskExport(taskId: string, orgCode?: string): Promise<void> {
+    const response = await apiClient.get(`/reports/sb-export/${taskId}`, {
+      params: orgCode ? { org_code: orgCode } : undefined,
+    });
+    const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sb-report-${taskId.slice(0, 8)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
 };
 
 // ─── Execution report (GET /api/reports/executions) ───────────────

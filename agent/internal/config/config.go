@@ -32,6 +32,7 @@ type Config struct {
 	UpdateInterval     time.Duration `yaml:"update_interval"`
 	CACert            string        `yaml:"ca_cert"`
 	SkipTLSVerify     bool          `yaml:"skip_tls_verify"`
+	AllowInsecure     bool          `yaml:"allow_insecure"`
 	UpdatePublicKey   string        `yaml:"update_public_key"`
 
 	// configPath tracks the file this config was loaded from, enabling Persist().
@@ -240,7 +241,9 @@ func (c *Config) Persist() error {
 // ValidateServerURL checks that rawURL uses https://, or http:// only for
 // localhost/127.0.0.1/[::1]. This prevents agents from sending credentials
 // over plaintext connections to remote servers.
-func ValidateServerURL(rawURL string) error {
+// When allowInsecure is true, plaintext HTTP to remote hosts is permitted
+// (LAN development scenarios).
+func ValidateServerURL(rawURL string, allowInsecure bool) error {
 	parsed, err := url.Parse(rawURL)
 	if err != nil {
 		return fmt.Errorf("invalid server URL %q: %w", rawURL, err)
@@ -254,7 +257,10 @@ func ValidateServerURL(rawURL string) error {
 		if host == "localhost" || host == "127.0.0.1" || host == "::1" {
 			return nil
 		}
-		return fmt.Errorf("server URL %q uses plaintext HTTP to a remote host; use https:// or connect to localhost for development", rawURL)
+		if allowInsecure {
+			return nil
+		}
+		return fmt.Errorf("server URL %q uses plaintext HTTP to a remote host; use https:// or pass --allow-insecure for LAN development", rawURL)
 	case "":
 		return fmt.Errorf("server URL %q has no scheme; use https://", rawURL)
 	default:
@@ -374,7 +380,7 @@ func (c *Config) Validate() error {
 	if c.ServerURL == "" {
 		return fmt.Errorf("server_url is required")
 	}
-	if err := ValidateServerURL(c.ServerURL); err != nil {
+	if err := ValidateServerURL(c.ServerURL, c.AllowInsecure); err != nil {
 		return err
 	}
 	if c.AgentID == "" {

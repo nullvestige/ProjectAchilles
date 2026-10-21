@@ -35,6 +35,7 @@ type Result struct {
 	Hostname            string         `json:"hostname"`
 	OS                  string         `json:"os"`
 	Arch                string         `json:"arch"`
+	Logs                string         `json:"logs,omitempty"`
 	BundleResults       *BundleResults `json:"bundle_results,omitempty"`
 }
 

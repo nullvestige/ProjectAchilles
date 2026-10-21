@@ -9,7 +9,7 @@ import (
 
 func TestEnrollRejectsHTTPServer(t *testing.T) {
 	// http:// to a remote host should be rejected before any network call.
-	err := Enroll("http://remote.example.com", "token-abc", t.TempDir()+"/cfg.yaml", "0.1.0")
+	err := Enroll("http://remote.example.com", "token-abc", t.TempDir()+"/cfg.yaml", "0.1.0", false)
 	if err == nil {
 		t.Fatal("expected error for http:// remote server")
 	}
@@ -21,7 +21,7 @@ func TestEnrollRejectsHTTPServer(t *testing.T) {
 
 func TestEnrollAcceptsHTTPLocalhost(t *testing.T) {
 	// http://localhost should pass URL validation (will fail on network, not scheme).
-	err := Enroll("http://localhost:9999", "token-abc", t.TempDir()+"/cfg.yaml", "0.1.0")
+	err := Enroll("http://localhost:9999", "token-abc", t.TempDir()+"/cfg.yaml", "0.1.0", false)
 	if err == nil {
 		t.Fatal("expected error (no server), but not a scheme error")
 	}
@@ -32,7 +32,7 @@ func TestEnrollAcceptsHTTPLocalhost(t *testing.T) {
 
 func TestEnrollAcceptsHTTPS(t *testing.T) {
 	// https:// should pass URL validation (will fail on network, not scheme).
-	err := Enroll("https://nonexistent.example.com", "token-abc", t.TempDir()+"/cfg.yaml", "0.1.0")
+	err := Enroll("https://nonexistent.example.com", "token-abc", t.TempDir()+"/cfg.yaml", "0.1.0", false)
 	if err == nil {
 		t.Fatal("expected error (no server), but not a scheme error")
 	}
@@ -96,7 +96,7 @@ func TestEnrollRejectsInsecureServerResponse(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	err := Enroll(srv.URL, "token-abc", t.TempDir()+"/cfg.yaml", "0.1.0")
+	err := Enroll(srv.URL, "token-abc", t.TempDir()+"/cfg.yaml", "0.1.0", false)
 	if err == nil {
 		t.Fatal("expected error for insecure server_url in response")
 	}

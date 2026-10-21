@@ -5,6 +5,7 @@ import { SettingsService } from '../services/analytics/settings.js';
 import { IntegrationsSettingsService } from '../services/integrations/settings.js';
 import { ExecutionReportService } from '../services/reports/executionReport.service.js';
 import { SbReportService, parseSbReportWindow } from '../services/reports/sbReport.service.js';
+import { generateSbReportFromTask, generateSbReportFromTasks } from '../services/reports/sbTaskExport.service.js';
 
 const router = Router();
 
@@ -110,6 +111,55 @@ router.get('/executions', requirePermission('analytics:dashboards:read'), asyncH
   });
 
   res.json({ success: true, data: report });
+}));
+
+// GET /api/reports/sb-export/:taskId - SB-PC-2026-001 JSON export from a single
+// task's bundle_results (SQLite — no Elasticsearch required).
+// Query params: org_code (SB entity code), vendor (default "ProjectAchilles").
+router.get('/sb-export/:taskId', requirePermission('analytics:dashboards:read'), asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
+
+  try {
+    const report = generateSbReportFromTask({
+      taskId,
+      orgCode: req.query.org_code as string | undefined,
+      vendor: req.query.vendor as string | undefined,
+    });
+    res.json(report);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('not found')) throw new AppError(message, 404);
+    if (message.includes('no result') || message.includes('no bundle_results')) throw new AppError(message, 400);
+    throw err;
+  }
+}));
+
+// POST /api/reports/sb-export - SB-PC-2026-001 JSON export from multiple tasks.
+// Body: { task_ids: string[], org_code?: string, vendor?: string }
+router.post('/sb-export', requirePermission('analytics:dashboards:read'), asyncHandler(async (req, res) => {
+  const { task_ids, org_code, vendor } = req.body as {
+    task_ids?: string[];
+    org_code?: string;
+    vendor?: string;
+  };
+
+  if (!task_ids || !Array.isArray(task_ids) || task_ids.length === 0) {
+    throw new AppError('task_ids array is required', 400);
+  }
+
+  try {
+    const report = generateSbReportFromTasks({
+      taskIds: task_ids,
+      orgCode: org_code,
+      vendor,
+    });
+    res.json(report);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('not found')) throw new AppError(message, 404);
+    if (message.includes('no result') || message.includes('no bundle_results')) throw new AppError(message, 400);
+    throw err;
+  }
 }));
 
 export default router;

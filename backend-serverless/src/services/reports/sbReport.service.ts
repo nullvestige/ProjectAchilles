@@ -29,13 +29,21 @@ import type { AnalyticsSettings } from '../../types/analytics.js';
 export const SB_BUNDLE_ID = 'SB-PC-2026-001';
 export const SB_BUNDLE_NAME = 'Ransomware con doble extorsión — LockBit 3.0';
 
-// SB-PC-2026-001 objective labels (bulletin section 02, keyed by stage 1–5).
+// SB-PC-2026-001 objective labels (bulletin section 02). The 11 execution
+// stages map to 5 SB objectives — stages that split a single objective into
+// per-TTP binaries share the same label.
 export const SB_STAGE_LABELS: Record<number, string> = {
   1: 'Ejecución y degradación de defensas en los endpoints',
-  2: 'Acceso a credenciales privilegiadas',
-  3: 'Movimiento lateral y propagación hacia activos de valor',
-  4: 'Exfiltración de datos previa al cifrado',
-  5: 'Impacto por cifrado y bloqueo de recuperación',
+  2: 'Ejecución y degradación de defensas en los endpoints',
+  3: 'Ejecución y degradación de defensas en los endpoints',
+  4: 'Acceso a credenciales privilegiadas',
+  5: 'Acceso a credenciales privilegiadas',
+  6: 'Movimiento lateral y propagación hacia activos de valor',
+  7: 'Movimiento lateral y propagación hacia activos de valor',
+  8: 'Exfiltración de datos previa al cifrado',
+  9: 'Impacto por cifrado y bloqueo de recuperación',
+  10: 'Impacto por cifrado y bloqueo de recuperación',
+  11: 'Impacto por cifrado y bloqueo de recuperación',
 };
 
 // ATT&CK tactic kebab-case -> TA identifier (the SB format uses TA codes).

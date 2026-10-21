@@ -258,6 +258,7 @@ export interface TaskResult {
   hostname: string;
   os: AgentOS;
   arch: AgentArch;
+  logs?: string;
   bundle_results?: BundleResults;
 }
 

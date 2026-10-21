@@ -3,7 +3,7 @@ import { resolveTaskStatusDisplay } from '@/utils/taskStatusDisplay';
 import type { AgentTask } from '@/types/agent';
 
 interface TaskStatusBadgeProps {
-  task: Pick<AgentTask, 'status' | 'result'>;
+  task: Pick<AgentTask, 'status' | 'type' | 'result'>;
   className?: string;
 }
 

@@ -134,5 +134,6 @@ export const TaskResultSchema = z.object({
   os: AgentOSSchema,
   arch: AgentArchSchema,
   error: z.string().optional(),
+  logs: z.string().optional(),
   bundle_results: BundleResultsSchema.optional(),
 });

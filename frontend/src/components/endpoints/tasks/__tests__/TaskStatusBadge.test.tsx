@@ -14,7 +14,7 @@ const res = (exit_code: number): TaskResult => ({
 } as TaskResult);
 
 const task = (status: AgentTask['status'], result: TaskResult | null = null) =>
-  ({ status, result } as Pick<AgentTask, 'status' | 'result'>);
+  ({ status, type: 'execute_test', result } as Pick<AgentTask, 'status' | 'type' | 'result'>);
 
 describe('TaskStatusBadge', () => {
   it('renders "Failed" for a completed task with non-zero exit code', () => {

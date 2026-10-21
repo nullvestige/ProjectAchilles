@@ -42,9 +42,9 @@ type enrollResponse struct {
 // Enroll performs the one-time enrollment handshake with the server.
 // It POSTs system information and the enrollment token, then saves the
 // returned configuration to configPath.
-func Enroll(serverURL, token, configPath, version string) error {
+func Enroll(serverURL, token, configPath, version string, allowInsecure bool) error {
 	// Validate server URL before sending credentials over the wire.
-	if err := config.ValidateServerURL(serverURL); err != nil {
+	if err := config.ValidateServerURL(serverURL, allowInsecure); err != nil {
 		return fmt.Errorf("refusing to enroll: %w", err)
 	}
 
@@ -109,7 +109,7 @@ func Enroll(serverURL, token, configPath, version string) error {
 
 	// Validate the server-returned URL before saving it — a misconfigured
 	// backend could hand back http:// even when we connected via https://.
-	if err := config.ValidateServerURL(data.ServerURL); err != nil {
+	if err := config.ValidateServerURL(data.ServerURL, allowInsecure); err != nil {
 		return fmt.Errorf("server returned insecure URL: %w", err)
 	}
 
@@ -122,6 +122,7 @@ func Enroll(serverURL, token, configPath, version string) error {
 		cfg.PollInterval = time.Duration(data.PollInterval) * time.Second
 	}
 	cfg.UpdatePublicKey = data.UpdatePublicKey
+	cfg.AllowInsecure = allowInsecure
 
 	if err := cfg.Save(configPath); err != nil {
 		return fmt.Errorf("save config: %w", err)

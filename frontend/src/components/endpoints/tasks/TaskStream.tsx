@@ -7,7 +7,7 @@
  */
 
 import { Fragment, useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, FileText, Maximize2, RotateCcw, Trash2, XCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Download, FileText, Maximize2, RotateCcw, Trash2, XCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { AgentTask, TaskGroup } from '@/types/agent';
 import { resolveTaskStatusDisplay, type TaskStatusVariant } from '@/utils/taskStatusDisplay';
@@ -17,6 +17,7 @@ import { Loading } from '../../shared/ui/Spinner';
 import TaskStatusBadge from './TaskStatusBadge';
 import { cn } from '@/lib/utils';
 import { StreamRow } from '../../shared/ui/StreamRow';
+import { reportsApi } from '@/services/api/reports';
 
 interface TaskStreamProps {
   groups: TaskGroup[];
@@ -136,6 +137,7 @@ export default function TaskStream({
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [collapsedBatches, setCollapsedBatches] = useState<Set<string>>(new Set());
   const [outputView, setOutputView] = useState<{ label: string; task: string; text: string } | null>(null);
+  const [sbExporting, setSbExporting] = useState(false);
 
   const allTasks = useMemo(() => groups.flatMap((g) => g.tasks), [groups]);
   const selectedTask = useMemo(
@@ -378,13 +380,42 @@ export default function TaskStream({
                     setOutputView({ label: 'stderr', task: taskName(selectedTask), text: selectedTask.result?.stderr ?? '' })
                   }
                 />
+                <OutputBlock
+                  label="logs"
+                  text={selectedTask.result.logs}
+                  maxHeightClass="max-h-32"
+                  onExpand={() =>
+                    setOutputView({ label: 'logs', task: taskName(selectedTask), text: selectedTask.result?.logs ?? '' })
+                  }
+                />
               </>
             ) : (
               <div className="flex h-20 items-center justify-center text-sm text-faint">
                 No result yet — task is {resolveTaskStatusDisplay(selectedTask).label.toLowerCase()}.
               </div>
             )}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {selectedTask.type === 'execute_test' && selectedTask.status === 'completed' && selectedTask.result && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={sbExporting}
+                  onClick={async () => {
+                    setSbExporting(true);
+                    try {
+                      await reportsApi.downloadSbTaskExport(selectedTask.id);
+                    } catch (err) {
+                      console.error('SB Export failed:', err);
+                      alert(`SB Export failed: ${err instanceof Error ? err.message : 'unknown error'}`);
+                    } finally {
+                      setSbExporting(false);
+                    }
+                  }}
+                >
+                  <Download className="mr-1 h-3.5 w-3.5" />
+                  {sbExporting ? 'Exporting…' : 'SB Export'}
+                </Button>
+              )}
               {onRetry && isRetryable(selectedTask) && (
                 <Button variant="secondary" size="sm" onClick={() => onRetry(selectedTask.id)}>
                   <RotateCcw className="mr-1 h-3.5 w-3.5" />
